@@ -30,19 +30,23 @@ higher_fast_foldername = 'higher_fast_test1'
 
 runcode = 'Test1'  # runcode set during CliMoChem run in Matlab
 
+# todo(change these to os.path style imports)
 input_excel_path = '/Users/justin/Documents/PFSA Project/'  # location of the master Excel file (containing folder)
 excel_filename = 'PFSA_inventory_8a.xlsx'  # name of the master Excel file
 climochem_files_path = '/Users/justin/Documents/PFSA Project/Model Runs'  # directory of the climochem folders (
 # higher and lower)
 
+# todo(set these generically with os)
 climochem_foldername = '/oct25_noPOSF_multi_on_1/'
 climochem_second_foldername = '/oct25_noPOSF_multi_on_1_lower/'  # location of the lower bound results folders for
 # the second lower scenario
 
 # What is the start and end year to model? (This needs to also be set in CCcontrol.m)
+# todo(these should be wrapped in a class).
 start_year = 1958
 end_year = 2030
 
+# todo(these should also be wrapped in the class).
 # Plot Armitage's results as well?
 plot_armitage = 'no'  # Can be 'yes' or 'no'
 # Highlight yearly median environmental measurement value?
@@ -79,6 +83,8 @@ sep_substance = 'noPOSF'  # substance to run in model (PFOS, POSF, xFOSA/Es, or 
 
 # In[49]:
 
+# todo(wrap gen_inputs in the class function, this will simplify the method call)
+# todo(figure out a way to iterate combinations, if need be).
 # Gen inputs for each scenario combination (lower inventory/slow degredation scenario, etc)
 gen_inputs('lower', 'slow', lower_slow_foldername, climochem_files_path, climochem_foldername, input_excel_path,
            excel_filename, start_year, end_year, sep_run, sep_substance)
@@ -100,6 +106,7 @@ def gen_inputs(inventory_scenario, degredation_scenario, output_foldername, clim
     # Import trade data from Excel workbook file
 
     # Assign workbook location
+    # todo(don't assign a path, use an input - make simpler)
     data_in = pd.ExcelFile(input_excel_path + excel_filename)
 
     # Change the pandas display option so that all text in a column/value is visible
@@ -110,13 +117,16 @@ def gen_inputs(inventory_scenario, degredation_scenario, output_foldername, clim
 
     # Parse imported raw Excel file, skip first rows, define header lables
     # Define the start and end columns to be imported from the sheet. Needs updated in Excel sheet columns added/removed
+    # todo(seperate function in the API)
     emiss = data_in.parse(sheetname=sheet_name, header=0, skiprows=15, skip_footer=4, index_col=0,
                           parse_cols="FM:IO", parse_dates=False, date_parser=False, na_values=['NA'], thousands=None,
                           # chunksize=None,
                           convert_float=False, has_index_names=False, converters=None)
+
     # emiss
 
     # Identify dataframe columns representing lower secenario results
+    # todo(seperate function in the API)
     selected_columns = [1.0, 2.0]  # include the first two columns defining the actual year and year index number
     selected_columns.extend([col for col in emiss.columns if inventory_scenario in emiss.loc[
         'scenario', col]])  # identify columns with the appropriate inventory secenario (lower or higher)
@@ -132,6 +142,8 @@ def gen_inputs(inventory_scenario, degredation_scenario, output_foldername, clim
     start_index = start_year - 1958 + 4
     end_index = end_year - 1958 + 5
 
+    # todo(Ask justin why he used a while loop?)
+    # todo(Move information that trails line to above line)
     i = 2  # start i on the third column (ie first column of actual data)
     while i < len(selected_columns):
         col_name = selected_columns[i]
@@ -147,13 +159,13 @@ def gen_inputs(inventory_scenario, degredation_scenario, output_foldername, clim
             season = [x + prev_seasons for x in
                       months]  # add previous months to range from 1 to 12 and append to output list
 
-            zone_num = [emiss_scenario.loc[
-                            'zone_num', col_name]] * 12  # [row index name, col index name], duplicate 12 times to
+            # [row index name, col index name], # duplicate 12 times to
+            zone_num = [emiss_scenario.loc['zone_num', col_name]] * 12
             # represent each month of the year
             phase_num = [emiss_scenario.loc['phase_num', col_name]] * 12
             subst_num = [emiss_scenario.loc['subst_num', col_name]] * 12
-            mass = [emiss_scenario[col_name][
-                        j] * 1000 / 12] * 12  # converted to kg and divided by 12 to distribute throughout year
+            mass = [emiss_scenario[col_name][j] * 1000 / 12] * 12  # converted to kg and divided by 12 # to distribute
+            #  throughout year
 
             # Create a dataframe with the data for this section
             temp_frame = pd.DataFrame(
@@ -172,6 +184,7 @@ def gen_inputs(inventory_scenario, degredation_scenario, output_foldername, clim
     output_frame_clean_a = output_frame
 
     # If running model individually for PFOS, POSF, or xFOSA/Es, remove all other emissions from input file:
+    # todo(better ways to argparse - outside code?)
     if sep_run == 'yes':
         if sep_substance == 'POSF':
             sep_substance_num = [1]
@@ -194,6 +207,7 @@ def gen_inputs(inventory_scenario, degredation_scenario, output_foldername, clim
     # rounded)
     # output_frame_clean[['season','zone_num','phase_num','subst_num','mass']] = output_frame_clean[['season',
     # 'zone_num','phase_num','subst_num','mass']].astype(int) #old method that was removing mass value's decimal place
+    # todo(Justin - explain?)
     output_frame_clean[['season', 'zone_num', 'phase_num', 'subst_num']] = output_frame_clean[
         ['season', 'zone_num', 'phase_num', 'subst_num']].astype(int)
 
@@ -201,8 +215,12 @@ def gen_inputs(inventory_scenario, degredation_scenario, output_foldername, clim
     output_frame_clean = output_frame_clean[['season', 'zone_num', 'phase_num', 'subst_num', 'mass']]
 
     # Define intro text to be written in output file
+    # todo(use 'textwrap' package for easier printing)
+
     text = "Continuous emissions in kg per season. Emissions are homogeneously distributed over the seasons.\n" + \
            "\n" + "Beware: Either a peak or a continuous emission has to occur in the 1st season!\n" + "Syntax: first " \
+                                                                                                       "" \
+                                                                                                       "" \
                                                                                                        "line gives " \
                                                                                                        "number of " \
                                                                                                        "emissions, " \
@@ -211,6 +229,7 @@ def gen_inputs(inventory_scenario, degredation_scenario, output_foldername, clim
     # emissions included in the input file
 
     # Create text file with intro text
+
     with open(climochem_files_path + climochem_foldername + output_foldername + '/MIF/' + 'cont_emissions.txt',
               "w") as text_file:
         text_file.write(text)
@@ -286,6 +305,7 @@ def gen_inputs(inventory_scenario, degredation_scenario, output_foldername, clim
 
 
     # If running model for individual substances, filter to include only needed fofs:
+    # todo(better argparse & figure out what these are)
     if sep_run == 'yes':
         # Create a new combined column defined as the #Parent Substance and #Daughter Substance as a single number:
         fofs_in[4] = fofs_in[0].map(int).map(str) + fofs_in[1].map(int).map(str)
@@ -334,6 +354,7 @@ def gen_inputs(inventory_scenario, degredation_scenario, output_foldername, clim
                                                                               'subs_prop.txt, and fofs.txt files ' \
                                                                               'written to MIF folder.'
     print message
+    # todo(shouldn't this return something?)
 
 
 # ### Defines CliMoChem Results Extract Function
@@ -564,6 +585,7 @@ def generate_plot(climochem_files_path, climochem_foldername, climochem_second_f
     # Remove any environmental data points chosen to be excluded in the Excel sheet if exclude column for that
     # species contains a "yes"
 
+    #todo(put in method - better argparse)
     if substance == 'xFOSAs':
         if any(air_table_int['exclude_xFOSAs'].isin(['yes', 'hard_yes'])):
             air_table_int1 = air_table_int[air_table_int.exclude_xFOSAs != 'yes']
@@ -638,6 +660,7 @@ def generate_plot(climochem_files_path, climochem_foldername, climochem_second_f
         y_axis_title = ''
 
 
+    #todo(get rid of remnant code - what's valuable?)
         # No longer ever summing xFOSAs and xFOSEs together, so this section ignored:
 
     #     #If total xFOSA/Es should be plotted (substance = 'xFOSAEs'), then extract separately from CliMoChem
@@ -663,6 +686,7 @@ def generate_plot(climochem_files_path, climochem_foldername, climochem_second_f
 
     # Extact CliMoChem results using function
     # Extract lower inventory scneario results
+    #todo(results should be generated outside code and imported, so you can loop - reorg)
     lower_slow_results = model_extract(climochem_files_path, climochem_foldername, lower_slow_foldername, runcode,
                                        substance, compartment, zone)
     lower_fast_results = model_extract(climochem_files_path, climochem_foldername, lower_fast_foldername, runcode,
@@ -682,6 +706,7 @@ def generate_plot(climochem_files_path, climochem_foldername, climochem_second_f
                                                   lower_fast_foldername, runcode, substance, compartment, zone)
 
     # Use bokeh to create interactive plot
+    #todo(move imports up top)
     from bokeh.plotting import figure, show, output_file, ColumnDataSource
     from bokeh.models import HoverTool, BoxZoomTool, ResetTool, PanTool, WheelZoomTool
 
@@ -693,7 +718,7 @@ def generate_plot(climochem_files_path, climochem_foldername, climochem_second_f
 
     if (substance == 'PFOS' and compartment == 'water') or (substance == 'xFOSAs' and compartment == 'atmos') or (
                     substance == 'xFOSEs' and compartment == 'atmos') or (
-            substance == 'xFOSAEs' and compartment == 'atmos'):
+                    substance == 'xFOSAEs' and compartment == 'atmos'):
 
         if compartment == 'water':
             selected_table = ocean_table
@@ -1232,6 +1257,7 @@ from bokeh.io import gridplot, output_file, show
 output_file(climochem_files_path + climochem_foldername + substance_list + "_" + compartment_list + "_svg.html",
             mode="inline")
 
+#todo(make a loop)
 p1_legend = generate_plot(climochem_files_path, climochem_foldername, climochem_second_foldername, input_excel_path,
                           excel_filename, lower_slow_foldername, lower_fast_foldername, higher_slow_foldername,
                           higher_fast_foldername, runcode, substance_list, compartment_list, str(zone_a), plot_armitage,
