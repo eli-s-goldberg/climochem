@@ -1,0 +1,11 @@
+fractions of formation
+#_of_fofs_given
+#_of_parent_compound #_of_daughter_compound #_phase fof
+
+0
+
+1 2 3 1
+2 3 3 0.22
+1 3 2 0.22
+
+POSF - PFOA indirect

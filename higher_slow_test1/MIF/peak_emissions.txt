@@ -1,0 +1,6 @@
+Peak emissions in kg. Emissions occur at the beginning of each season.
+Beware: Either a peak or a continuous emission has to occur in the 1st season!
+Syntax: first line gives number of emissions, then
+listind Zone Phase Substance Mass
+
+0

@@ -1,0 +1,57 @@
+
+
+
+
+Bug: Difference in total mass in a zone containing is is not equal to SUM(fluxes)
+
+
+caused by:
+    ommitting "icevolfactor(i,season)" in the calculation of umatrix
+
+Solved by adding "* icevolfactor(i,season)" to the calculation of umatrix
+
+
+Aktueller Code
+
+if vol(6,i+1) ~= 0 && icevolfactor(i,season) ~=   0
+	if SizeDif	
+ 		umatrix(6,3,2,subs) = (phiFine(season,i,subs) * v36dryFine + phiCoarse(season,i,subs) * v36dryCoarse) * vol(3,i+1)/(vol(6,i+1) * icevolfactor(i,season));
+ 		umatrix(6,3,4,subs) = (phiFine(season,i,subs) * v36wetFine + phiCoarse(season,i,subs) * v36wetCoarse) * vol(3,i+1)/(vol(6,i+1) * icevolfactor(i,season));
+ 	else
+ 		umatrix(6,3,2,subs) = (phi(season,i,subs) * v36dry * vol(3,i+1))/(vol(6,i+1) * icevolfactor(i,season));           % air --> ice:  par.dep.dry  Missing 
+ 		umatrix(6,3,4,subs) = (phi(season,i,subs) * v36wet * vol(3,i+1))/(vol(6,i+1) * icevolfactor(i,season));            % air --> ice: par.dep.wet
+ 	end
+ 	umatrix(6,3,1,subs) = ((1-phi(season,i,subs)) * v36diff * vol(3,i+1))/(vol(6,i+1) * icevolfactor(i,season));      % air --> ice: diff.out
+        umatrix(6,3,3,subs) = ((1-phi(season,i,subs)) * v36rain * vol(3,i+1))/(vol(6,i+1) * icevolfactor(i,season));      % air --> ice: gas.dep.wet
+        
+        
+
+Bug: 		mass of chemical in vegetation snow or ice is over/underestimated (while concentration is correct)
+		When CalcFluxFlag == True
+
+caused by: 	Adaption of media volumes to the new season in dynamike before the masses for the old season are calculated
+
+Solved by:	moving the following Code out of dynamike, and behind makefluxvtab, makefluxetab and calcflux.
+
+
+  
+Block:
+
+> for subs=1:nsubs
+> 
+>     writemasses;% writes the masses into file
+>     if vegmod ~= 0
+>         adjustvegec0;   % necessary since vegetation volume changes between seasons
+>     end
+>     if iceandsnow
+>         adjustsnow;
+>         adjustice;
+>     end
+> 
+>     if screRes
+>         disp2('maximal exposure summand in current season for substance',char(nameSub(subs,:)) ,listind,':',maxExpos);
+>         disp2('in compartment:',maxbox);
+>     end
+> end
+
+
